@@ -20,6 +20,8 @@ meta_block fusion(meta_block block, int ok);
 meta_block get_pointer_to_meta_block(void *ptr);
 int valid_addr(void *p);
 void my_free(void *p);
+void copy_block(meta_block original, meta_block copy);
+void *my_realloc(void *p, size_t new_size);
 /*
 Metadata block
 @param size Size that the user allocates
@@ -229,6 +231,62 @@ void my_free(void *p) {
             brk(b);
         }
     }
+}
+
+/*
+Copy the data from a block to another
+@param original The original block containing the data
+@param copy The copy of the original block
+*/
+void copy_block(meta_block original, meta_block copy) {
+    if(!original || !copy || original->size > copy->size) 
+        return;
+    int *original_p = (int*) original->anchor;
+    int *copy_p = (int*) copy->anchor;
+    while(original_p < (int*)((char*)original->anchor + original->size)) {
+        *copy_p = *original_p;
+        copy_p++;
+        original_p++;
+    }
+}
+
+/*
+Reallocate the memory for the new given size and pointer to previously allocated memory
+@param new_size Size provided by the user
+@param p Pointer to the memory that has to be reallocated
+@return Pointer to the new allocated memory
+*/
+void *my_realloc(void *p, size_t new_size) {
+    meta_block block, new_block;
+    void *new_p;
+    if(!p)
+        return my_malloc(new_size); 
+    if(valid_addr(p)) {
+        new_size = align_64b(new_size);
+         block = get_pointer_to_meta_block(p);
+        if(block->size >= new_size){
+            if(block->size >= new_size + BLOCK_SIZE + 8)
+                split_block(block, new_size);
+        }  
+        else {
+            block = fusion(block, 1);
+            if(block->size >= new_size){
+                if(block->size >= new_size + BLOCK_SIZE + 8)
+                    split_block(block, new_size);
+            }
+            else {
+                new_p = my_malloc(new_size);
+                if(!new_p)
+                    return NULL;
+                new_block = get_pointer_to_meta_block(new_p);
+                copy_block(block, new_block);
+                my_free(p);
+                return new_p;
+            }
+        }
+        return p;
+    }
+    return NULL;   
 }
 
 

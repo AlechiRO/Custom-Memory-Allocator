@@ -27,6 +27,7 @@ void split_block(meta_block b, size_t new_size);
 meta_block fusion(meta_block block, int ok);
 meta_block get_pointer_to_meta_block(void *ptr);
 int valid_addr(void *p);
+void copy_block(meta_block original, meta_block copy);
 void reset_heap();
 
 
@@ -291,6 +292,62 @@ void test_my_calloc_size(void) {
     CU_ASSERT_EQUAL(get_pointer_to_meta_block(p)->size, 39 * 71 + 8 -((39 * 71) % 8));
 }
 
+void test_copy_block_content(void) {
+    meta_block b1;
+    base = extend_heap(NULL, 8);
+    b1 = extend_heap(base, 16);
+    char *base_pointer = base->anchor;
+    char *b1_pointer = b1->anchor;
+    for(int i = 0; i<base->size; i++) {
+        *base_pointer = 'A';
+        base_pointer++;
+    }
+    copy_block(base, b1);
+    for(int i = 0; i<base->size; i++) {
+        CU_ASSERT_EQUAL(*b1_pointer, 'A');
+        b1_pointer++;
+    }
+}
+
+void test_copy_block_size_restriction(void) {
+    meta_block b1;
+    base = extend_heap(NULL, 16);
+    b1 = extend_heap(base, 8);
+    char *base_pointer = base->anchor;
+    char *b1_pointer = b1->anchor;
+    for(int i = 0; i<base->size; i++) {
+        *base_pointer = 'A';
+        base_pointer++;
+    }
+    copy_block(base, b1);
+    for(int i = 0; i<base->size; i++) {
+        CU_ASSERT_NOT_EQUAL(*b1_pointer, 'A');
+        b1_pointer++;
+    }
+}
+
+void test_my_realloc_null(void) {
+    void *p = my_realloc(NULL, 192);
+    CU_ASSERT_PTR_NOT_NULL(p);
+    meta_block b = get_pointer_to_meta_block(p);
+    CU_ASSERT_EQUAL(b->size, 192);
+}
+
+void test_my_realloc_invalid_address(void) {
+    base = extend_heap(NULL, 16);
+    void *p = base->anchor + base->size + 100;
+    void *result = my_realloc(p, 16);
+    CU_ASSERT_PTR_NULL(result);
+}
+
+void test_my_realloc_same_size(void) {
+    void *p = my_malloc(24);
+    void *result = my_realloc(p, 24);
+    meta_block p_block = get_pointer_to_meta_block(p);
+    meta_block result_block = get_pointer_to_meta_block(result);
+    CU_ASSERT_EQUAL(p, result);
+    CU_ASSERT_EQUAL(p_block->size, result_block->size);
+}
 /*
 Helper method to create a suite
 @param name Pointer to the name of the suite
@@ -394,6 +451,18 @@ int main(void) {
     CU_add_test(my_calloc_suite, "my_calloc_boundaries", test_my_calloc_boundaries);
     CU_add_test(my_calloc_suite, "my_calloc_size", test_my_calloc_size);
 
+    // copy_block suite
+    CU_pSuite copy_block_suite = create_suite("copy_block suite");
+
+    CU_add_test(copy_block_suite, "copy_block_content", test_copy_block_content);
+    CU_add_test(copy_block_suite, "copy_block_size_restriction", test_copy_block_size_restriction);
+
+    // my_realloc suite
+    CU_pSuite my_realloc_suite = create_suite("my_realloc suite");
+
+    CU_add_test(my_realloc_suite, "my_realloc_null", test_my_realloc_null);
+    CU_add_test(my_realloc_suite, "my_realloc_invalid_address", test_my_realloc_invalid_address);
+    CU_add_test(my_realloc_suite, "my_realloc_same_size", test_my_realloc_same_size);
 
     // run the tests
     CU_basic_run_tests();
