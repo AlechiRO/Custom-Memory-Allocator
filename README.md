@@ -20,7 +20,7 @@
     * The start of the heap
     * Mapped region
     * Unmapped region
-    * Unavailable space (prohibiteed by the OS)
+    * Unavailable space (prohibited by the OS)
 ### Figure 1.0
 ![alt text](img/image-2.png)
 ### sbrk()
