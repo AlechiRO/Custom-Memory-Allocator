@@ -8,6 +8,11 @@
 #include <CUnit/CUnit.h>
 #include <unistd.h>
 #include <stdint.h>
+#include <pthread.h>
+
+//Thread pointers
+
+pthread_t thread_1, thread_2;
 
 // Internal declarations for White-Box testing
 struct block {
@@ -565,6 +570,10 @@ int main(void) {
     CU_pSuite find_last_block_suite = create_suite("find_last_block suite"); 
     
     CU_add_test(find_last_block_suite, "find_last_block", test_find_last_block);
+
+    /* Test functions that are not THREAD SAFE */
+    CU_pSuite extend_heap_thread_safe_suite = create_suite("extend_heap_thread_safe suite");
+
 
     // run the tests
     CU_basic_run_tests();

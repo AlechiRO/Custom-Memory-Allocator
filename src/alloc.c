@@ -3,12 +3,14 @@
 #include <unistd.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <pthread.h>
 
 #define BLOCK_SIZE offsetof(struct block, anchor)
 
 typedef struct block *meta_block;
 
-meta_block base = NULL;
+//Global variable   
+meta_block base = NULL;         
 
 size_t align_64b(ssize_t x);
 meta_block find_block(meta_block *last, size_t size);
