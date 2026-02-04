@@ -35,7 +35,8 @@ int valid_addr(void *p);
 void copy_block(meta_block original, meta_block copy);
 meta_block find_last_block(void);
 void reset_heap();
-
+void internal_free(void *p);
+void *internal_malloc(size_t new_size);
 
 void test_align_zero(void) {
     CU_ASSERT_EQUAL(align_64b(0), 0);
