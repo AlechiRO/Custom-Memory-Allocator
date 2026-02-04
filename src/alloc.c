@@ -352,42 +352,10 @@ void *my_realloc(void *p, size_t new_size) {
 /* Wrapper functions for multithreaded programming */
 
 /*
-Struct for multithreaded malloc function
-*/
-typedef struct my_malloc_args {
-    size_t size;
-    void* result;
-} malloc_args;
-
-/*
-Struct for multithreaded realloc function
-*/
-typedef struct my_realloc_args {
-    void* p;
-    size_t new_size;
-    void* result;
-} realloc_args;
-
-/*
-Struct for multithreaded free function
-*/
-typedef struct my_free_args {
-    void* p;
-} free_args;
-/*
-Struct for multithreaded calloc function
-*/
-typedef struct my_calloc_args {
-    size_t num;
-    size_t size;
-    void* result;
-} calloc_args;
-
-/*
 Wrapper function for custom malloc
 @param args Pointer to a struct containing the function arguments
 */
-void* thread_my_malloc(void* args) {
+void* twrap_my_malloc(void* args) {
     malloc_args* data = (malloc_args*) args;
     data->result = my_malloc(data->size); 
     return NULL;
@@ -397,7 +365,7 @@ void* thread_my_malloc(void* args) {
 Wrapper function for custom realloc
 @param args Pointer to a struct containing the function arguments
 */
-void* thread_my_realloc(void* args) {
+void* twrap_my_realloc(void* args) {
     realloc_args* data = (realloc_args*) args;
     data->result = my_realloc(data->p, data->new_size);
     return NULL;
@@ -407,7 +375,7 @@ void* thread_my_realloc(void* args) {
 Wrapper function for custom free
 @param args Pointer to a struct containing the function arguments
 */
-void* thread_my_free(void* args) {
+void* twrap_my_free(void* args) {
     free_args* data = (free_args*) args;
     my_free(data->p);
     return NULL;
@@ -417,7 +385,7 @@ void* thread_my_free(void* args) {
 Wrapper function for custom calloc
 @param args Pointer to a struct containing the function arguments
 */
-void* thread_my_calloc(void* args) {
+void* twrap_my_calloc(void* args) {
     calloc_args* data = (calloc_args*) args;
     data->result = my_calloc(data->num, data->size);
     return NULL;
