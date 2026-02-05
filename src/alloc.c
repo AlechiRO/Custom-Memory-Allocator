@@ -3,23 +3,30 @@
 #include <unistd.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <pthread.h>
 
 #define BLOCK_SIZE offsetof(struct block, anchor)
 
+// Initialize the global mutex
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+
 typedef struct block *meta_block;
 
-meta_block base = NULL;
+// Global variable   
+meta_block base = NULL;         
 
 size_t align_64b(ssize_t x);
 meta_block find_block(meta_block *last, size_t size);
 meta_block extend_heap(meta_block last, size_t new_size);
 void split_block(meta_block b, size_t new_size);
 void *my_malloc(size_t new_size);
+void *internal_malloc(size_t new_size);
 void *my_calloc(size_t num, size_t size);
 meta_block fusion(meta_block block, int ok);
 meta_block get_pointer_to_meta_block(void *ptr);
 int valid_addr(void *p);
 void my_free(void *p);
+void internal_free(void *p);
 void copy_block(meta_block original, meta_block copy);
 meta_block find_last_block(void);
 void *my_realloc(void *p, size_t new_size);
@@ -47,6 +54,17 @@ Custom malloc function
 @return Pointer to the begining of the new allocated heap memory
 */
 void *my_malloc(size_t new_size) {
+     pthread_mutex_lock(&mutex);
+     void* result = internal_malloc(new_size);
+     pthread_mutex_unlock(&mutex);
+     return result;
+}
+/*
+Internal logic lock-free malloc function
+@param new_size The bytes allocated by the user
+@return Pointer to the begining of the new allocated heap memory
+*/
+void* internal_malloc(size_t new_size) {
     meta_block block = NULL;
     meta_block last = NULL;
     new_size = align_64b(new_size);          // 8-byte aligned input for sbrk()  
@@ -70,7 +88,7 @@ void *my_malloc(size_t new_size) {
                 return NULL; 
         }
     }
-    return (void*) block->anchor;  
+    return (void*) block->anchor; 
 }
 
 /*
@@ -82,13 +100,15 @@ void *my_malloc(size_t new_size) {
 void *my_calloc(size_t num, size_t size) {
     size_t *new;
     size_t size_8, i;
-    new = my_malloc(num * size);
+    pthread_mutex_lock(&mutex);
+    new = internal_malloc(num * size);
     if(new) {
         size_8 = align_64b(num*size)>>3; 
         for(i=0; i<size_8; i++)
             new[i]=0;
     }
-    return new;
+    pthread_mutex_unlock(&mutex);
+    return (void*) new;
 }
 
 /*
@@ -217,6 +237,16 @@ Mark the block as free, merges adjacent blocks and shrinks the heap if the block
 @param p Pointer to the block that is being freed
 */
 void my_free(void *p) {
+    pthread_mutex_lock(&mutex);
+    internal_free(p);
+    pthread_mutex_unlock(&mutex);
+}
+
+/*
+Internal logic lock-free free function 
+@param p Pointer to the block that is being freed
+*/
+void internal_free(void* p) {
     meta_block b;
     if(valid_addr(p)) {
         b = get_pointer_to_meta_block(p);
@@ -274,8 +304,11 @@ The data from the previously allocated memory is coppied or truncated in the new
 void *my_realloc(void *p, size_t new_size) {
     meta_block block, new_block;
     void *new_p;
-    if(!p)
-        return my_malloc(new_size); 
+    pthread_mutex_lock(&mutex);
+    if(!p){
+        pthread_mutex_unlock(&mutex);
+        return internal_malloc(new_size);
+    } 
     if(valid_addr(p)) {
         new_size = align_64b(new_size);
          block = get_pointer_to_meta_block(p);
@@ -292,22 +325,68 @@ void *my_realloc(void *p, size_t new_size) {
                     split_block(block, new_size);
                 p = block->anchor;
                 copy_block(copy, block);
-                my_free(copy->anchor);
+                internal_free(copy->anchor);
             }
             else {
-                my_free(copy->anchor);
-                new_p = my_malloc(new_size);
-                if(!new_p)
+                internal_free(copy->anchor);
+                new_p = internal_malloc(new_size);
+                if(!new_p){
+                    pthread_mutex_unlock(&mutex);
                     return NULL;
+                }     
                 new_block = get_pointer_to_meta_block(new_p);
                 copy_block(block, new_block);
-                my_free(p);
+                internal_free(p);
+                pthread_mutex_unlock(&mutex);
                 return new_p;
             }
         }
+        pthread_mutex_unlock(&mutex);
         return p;
     }
+    pthread_mutex_unlock(&mutex);
     return NULL;   
 }
 
 
+/* Wrapper functions for multithreaded programming */
+
+/*
+Wrapper function for custom malloc
+@param args Pointer to a struct containing the function arguments
+*/
+void* twrap_my_malloc(void* args) {
+    malloc_args* data = (malloc_args*) args;
+    data->result = my_malloc(data->size); 
+    return NULL;
+}
+
+/*
+Wrapper function for custom realloc
+@param args Pointer to a struct containing the function arguments
+*/
+void* twrap_my_realloc(void* args) {
+    realloc_args* data = (realloc_args*) args;
+    data->result = my_realloc(data->p, data->new_size);
+    return NULL;
+}
+
+/*
+Wrapper function for custom free
+@param args Pointer to a struct containing the function arguments
+*/
+void* twrap_my_free(void* args) {
+    free_args* data = (free_args*) args;
+    my_free(data->p);
+    return NULL;
+}
+
+/*
+Wrapper function for custom calloc
+@param args Pointer to a struct containing the function arguments
+*/
+void* twrap_my_calloc(void* args) {
+    calloc_args* data = (calloc_args*) args;
+    data->result = my_calloc(data->num, data->size);
+    return NULL;
+}

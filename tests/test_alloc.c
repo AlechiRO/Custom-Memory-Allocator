@@ -8,6 +8,11 @@
 #include <CUnit/CUnit.h>
 #include <unistd.h>
 #include <stdint.h>
+#include <pthread.h>
+
+//Thread pointers
+
+pthread_t threads[10];
 
 // Internal declarations for White-Box testing
 struct block {
@@ -30,7 +35,8 @@ int valid_addr(void *p);
 void copy_block(meta_block original, meta_block copy);
 meta_block find_last_block(void);
 void reset_heap();
-
+void internal_free(void *p);
+void *internal_malloc(size_t new_size);
 
 void test_align_zero(void) {
     CU_ASSERT_EQUAL(align_64b(0), 0);
@@ -321,7 +327,7 @@ void test_copy_block_size_restriction(void) {
         base_pointer++;
     }
     copy_block(base, b1);
-    for(int i = 0; i<base->size; i++) {
+    for(int i = 0; i < base->size; i++) {
         CU_ASSERT_NOT_EQUAL(*b1_pointer, 'A');
         b1_pointer++;
     }
@@ -438,6 +444,76 @@ void test_my_realloc_split_integrity(void) {
     meta_block b2 = b1->next;
     for(int i = 0; i < b2->size; i++)
         CU_ASSERT_EQUAL(b2->anchor[i], 'A');  
+}
+
+void test_malloc_thread_safety(void) {
+     malloc_args args[10];
+    int i;
+    for(i = 0; i < 10; i++) 
+        args[i] = (malloc_args){ .size = 24 };
+    
+    for(i = 0; i < 10; i++) 
+        pthread_create(&threads[i], NULL, twrap_my_malloc, (void*)&args[i]);
+    
+    for(i = 0; i < 10; i++) {
+        pthread_join(threads[i], NULL);
+        CU_ASSERT_PTR_NOT_NULL(args[i].result);
+    }
+}
+
+void test_calloc_thread_safety(void) {
+    calloc_args args[10];
+    int i;
+    for(i = 0; i < 10; i++) 
+        args[i] = (calloc_args){ .num = 10, .size = 16};
+    
+
+    for(i = 0; i < 10; i++) 
+        pthread_create(&threads[i], NULL, twrap_my_calloc, (void*)&args[i]);
+    
+    for(i = 0; i < 10; i++) {
+        pthread_join(threads[i], NULL);
+        CU_ASSERT_PTR_NOT_NULL(args[i].result);
+    }
+}
+
+void test_free_thread_safety(void) {
+    free_args args[10];
+    void* p[10];
+    int i;
+    for(i = 0; i < 10; i++) {
+        p[i] = my_malloc(24);
+        args[i] = (free_args) { .p = p[i]};
+    }
+    
+    for(i = 0; i < 10; i++) 
+        pthread_create(&threads[i], NULL, twrap_my_free, (void*)&args[i]);
+
+    for(i = 0; i < 10; i++) 
+        pthread_join(threads[i], NULL); 
+    
+    CU_ASSERT_PTR_NULL(base);
+}
+
+void test_realloc_thread_safety(void) {
+    realloc_args args[10];
+    void* p[10];
+    meta_block blocks[10];
+    int i;
+    for(i = 0; i < 10; i++) {
+        p[i] = my_malloc(8);
+        args[i] = (realloc_args){ .p = p[i], .new_size = 48 };
+    }
+
+    for(i = 0; i < 10; i++) 
+        pthread_create(&threads[i], NULL, twrap_my_realloc, (void*)&args[i]);
+
+    for(i = 0; i < 10; i++) {
+        pthread_join(threads[i], NULL);
+        blocks[i] = get_pointer_to_meta_block(args[i].result);
+        CU_ASSERT_EQUAL(blocks[i]->size, 48);
+    }
+
 }
 
 /*
@@ -565,6 +641,23 @@ int main(void) {
     CU_pSuite find_last_block_suite = create_suite("find_last_block suite"); 
     
     CU_add_test(find_last_block_suite, "find_last_block", test_find_last_block);
+
+    /* Test functions that are not THREAD SAFE */
+    CU_pSuite malloc_thread_suite = create_suite("malloc_thread suite");
+
+    CU_add_test(malloc_thread_suite, "malloc_thread_safety", test_malloc_thread_safety);
+
+    CU_pSuite calloc_thread_suite = create_suite("calloc_thread suite");
+
+    CU_add_test(calloc_thread_suite, "calloc_thread_safety", test_calloc_thread_safety);
+
+    CU_pSuite free_thread_suite = create_suite("free_thread suite");
+
+    CU_add_test(free_thread_suite, "free_thread_safety", test_free_thread_safety);
+
+    CU_pSuite realloc_thread_suite = create_suite("realloc_thread suite");
+
+    CU_add_test(realloc_thread_suite, "realloc_thread_safety", test_realloc_thread_safety);
 
     // run the tests
     CU_basic_run_tests();
