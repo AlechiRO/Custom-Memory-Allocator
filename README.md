@@ -129,11 +129,15 @@ struct block {
 | copy_block | ```2 tests``` |
 | my_realloc | ```8 tests``` |
 | find_last_block | ```1 tests``` |
+| malloc_thread | ```1 tests``` |
+| calloc_thread | ```1 tests``` |
+| free_thread | ```1 tests``` |
+| realloc_thread | ```1 tests``` |
 
 ### Performance:
-* 13 suites
-* 44 tests
-* 137 asserts (due to asserts in loops testing integrity so data isn't lost)
+* 17 suites
+* 48 tests
+* 168 asserts (due to asserts in loops testing integrity so data isn't lost)
 * Elapsed time: 2 - 3.5 seconds
 * **Observation:** Elapsed time is pretty bad because of the **Volume** tests for ```my_malloc``` and ```my_calloc``` 
 ```c
@@ -287,8 +291,6 @@ If even after merging, the size obtained is not enough, the method ```my_malloc(
 # Future Improvements
 
 * Segregated Free Lists: To move from **O(n)** to **O(1)** search time, I plan to implement multiple free lists grouped by block size. The method most affected by this change will be ```find_block()```.
-
-* **Thread Safety:** Current implementation is not thread-safe. Future iterations will include a global pthread_mutex or per-thread arenas to prevent race conditions.
 
 * **Buddy Allocation:** Implementing a binary buddy system to improve the speed of splitting and merging.
 
