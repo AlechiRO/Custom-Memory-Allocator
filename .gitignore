@@ -1,7 +1,7 @@
+/build
 .vscode/
 tests/test_alloc
 *:Zone.Identifier
 img/*:Zone.Identifier
 *.o
 *.a
-/build

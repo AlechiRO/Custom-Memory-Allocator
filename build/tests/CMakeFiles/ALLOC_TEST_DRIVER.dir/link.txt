@@ -1,1 +1,0 @@
-/usr/bin/cc -g --coverage CMakeFiles/ALLOC_TEST_DRIVER.dir/test_alloc.c.o -o ALLOC_TEST_DRIVER  ../src/CMakeFiles/allocator_logic.dir/alloc.c.o /usr/lib/x86_64-linux-gnu/libcunit.so 
