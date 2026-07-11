@@ -162,9 +162,11 @@ void test_my_calloc_volume(void) {
 # How To Build And Run
 ### ```lcunit``` must be installed beforehand
 ### From the root of the project run the following commands:
-### 1. Move to the build directory
+### 1. Create the build directory
 ```c
-cd build
+mkdir build && cd build
+cmake -DCMAKE_BUILD_TYPE=Debug ..
+cmake --build .
 ```
 ### 2. Compile the project
 ```c
