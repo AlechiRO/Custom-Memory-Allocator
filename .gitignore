@@ -4,3 +4,4 @@ tests/test_alloc
 img/*:Zone.Identifier
 *.o
 *.a
+build/

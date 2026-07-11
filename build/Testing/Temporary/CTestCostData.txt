@@ -1,2 +1,2 @@
-test_alloc 2 1.10453
+test_alloc 3 0.729156
 ---

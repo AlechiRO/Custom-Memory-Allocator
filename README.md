@@ -162,17 +162,17 @@ void test_my_calloc_volume(void) {
 # How To Build And Run
 ### ```lcunit``` must be installed beforehand
 ### From the root of the project run the following commands:
-### 1. Move to the tests directory
+### 1. Move to the build directory
 ```c
-cd tests
+cd build
 ```
 ### 2. Compile the project
 ```c
-gcc -o test_alloc test_alloc.c ../src/alloc.c -I../src -lcunit
+make
 ```
 ### 3. Run the unit tests
 ```c
-./test_alloc
+ctest
 ```
 <br><br>
 # Internal Methods
