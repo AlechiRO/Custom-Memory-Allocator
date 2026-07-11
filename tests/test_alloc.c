@@ -23,8 +23,10 @@ struct block {
     int padding;
     char anchor[1];
 };
+
 typedef struct block *meta_block;
 extern meta_block base;
+
 size_t align_64b(ssize_t x);
 meta_block find_block(meta_block *last, size_t size);
 meta_block extend_heap(meta_block last, size_t new_size);

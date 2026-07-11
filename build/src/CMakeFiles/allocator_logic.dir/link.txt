@@ -1,0 +1,2 @@
+/usr/bin/ar qc liballocator_logic.a CMakeFiles/allocator_logic.dir/alloc.c.o
+/usr/bin/ranlib liballocator_logic.a

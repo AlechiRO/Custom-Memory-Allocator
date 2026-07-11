@@ -1,0 +1,14 @@
+[
+{
+  "directory": "/home/alexc/projects/custom_malloc/build/src",
+  "command": "/usr/bin/cc  -I/home/alexc/projects/custom_malloc/inc -g -std=gnu17 --coverage -o CMakeFiles/allocator_logic.dir/alloc.c.o -c /home/alexc/projects/custom_malloc/src/alloc.c",
+  "file": "/home/alexc/projects/custom_malloc/src/alloc.c",
+  "output": "src/CMakeFiles/allocator_logic.dir/alloc.c.o"
+},
+{
+  "directory": "/home/alexc/projects/custom_malloc/build/tests",
+  "command": "/usr/bin/cc  -I/home/alexc/projects/custom_malloc/inc -g -std=gnu17 --coverage -o CMakeFiles/ALLOC_TEST_DRIVER.dir/test_alloc.c.o -c /home/alexc/projects/custom_malloc/tests/test_alloc.c",
+  "file": "/home/alexc/projects/custom_malloc/tests/test_alloc.c",
+  "output": "tests/CMakeFiles/ALLOC_TEST_DRIVER.dir/test_alloc.c.o"
+}
+]

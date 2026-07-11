@@ -1,0 +1,11 @@
+/home/alexc/projects/custom_malloc/build/CMakeFiles/test.dir
+/home/alexc/projects/custom_malloc/build/CMakeFiles/edit_cache.dir
+/home/alexc/projects/custom_malloc/build/CMakeFiles/rebuild_cache.dir
+/home/alexc/projects/custom_malloc/build/src/CMakeFiles/allocator_logic.dir
+/home/alexc/projects/custom_malloc/build/src/CMakeFiles/test.dir
+/home/alexc/projects/custom_malloc/build/src/CMakeFiles/edit_cache.dir
+/home/alexc/projects/custom_malloc/build/src/CMakeFiles/rebuild_cache.dir
+/home/alexc/projects/custom_malloc/build/tests/CMakeFiles/ALLOC_TEST_DRIVER.dir
+/home/alexc/projects/custom_malloc/build/tests/CMakeFiles/test.dir
+/home/alexc/projects/custom_malloc/build/tests/CMakeFiles/edit_cache.dir
+/home/alexc/projects/custom_malloc/build/tests/CMakeFiles/rebuild_cache.dir
